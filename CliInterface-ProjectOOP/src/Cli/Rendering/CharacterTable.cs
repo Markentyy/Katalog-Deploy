@@ -20,10 +20,22 @@ namespace CliInterface.Cli.Rendering
         /// <param name="world">The character world.</param>
         /// <param name="renderer">The table renderer to aggregate.</param>
         public CharacterTable(CharacterWorld world, IRenderer<IReadOnlyList<CharacterRow>> renderer)
+            : this(world, BuildRows(world), renderer)
+        {
+        }
+
+        /// <summary>
+        /// Initializes the view over a pre-filtered set of character rows.
+        /// </summary>
+        /// <param name="world">The character world (for item and ability counts).</param>
+        /// <param name="rows">The rows to display.</param>
+        /// <param name="renderer">The table renderer to aggregate.</param>
+        public CharacterTable(CharacterWorld world, IReadOnlyList<CharacterRow> rows, IRenderer<IReadOnlyList<CharacterRow>> renderer)
         {
             ArgumentNullException.ThrowIfNull(world);
+            ArgumentNullException.ThrowIfNull(rows);
             ArgumentNullException.ThrowIfNull(renderer);
-            _rows = BuildRows(world);
+            _rows = rows;
             _renderer = renderer;
         }
 

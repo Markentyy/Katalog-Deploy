@@ -19,6 +19,7 @@ namespace CliInterface.Cli.Strategies
         {
             Register(new LsCommand(world, tableRenderer));
             Register(new InfoCommand(world, cardRenderer));
+            Register(new SearchCommand(world, tableRenderer));
         }
     }
 }
