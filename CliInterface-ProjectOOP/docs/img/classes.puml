@@ -135,6 +135,11 @@ IGraphicsService ..> GraphicsService
 Gui ..> Presentation : CharacterCatalogPresenter
 Gui ..> Core : CharacterStats, IGraphicsService
 Gui ..> Infrastructure : GenshinCharacterCatalogService, GraphicsService
+MainWindow ..> MainWindowViewModel
+MainWindowViewModel ..> CharacterCatalogPresenter
+MainWindowViewModel ..> CharacterCatalogViewModel
+GraphicsUrlConverter ..> IGraphicsService
+RelayCommand ..> ICommand
 
 Cli ..> ICommandStrategy
 Cli ..> ICommand
