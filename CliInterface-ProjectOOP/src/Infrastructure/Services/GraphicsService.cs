@@ -18,6 +18,11 @@ namespace CliInterface.Infrastructure.Services
             Timeout = TimeSpan.FromSeconds(10)
         };
 
+        /// <summary>
+        /// Gets the root directory where cached graphics are stored.
+        /// </summary>
+        public string CacheRoot { get; }
+
         private readonly string _cacheRoot;
 
         /// <summary>
@@ -27,6 +32,7 @@ namespace CliInterface.Infrastructure.Services
         public GraphicsService(string? cacheRoot = null)
         {
             _cacheRoot = cacheRoot ?? DefaultCacheRoot();
+            CacheRoot = _cacheRoot;
             Directory.CreateDirectory(_cacheRoot);
         }
 

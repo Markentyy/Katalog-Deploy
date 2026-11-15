@@ -22,5 +22,10 @@ namespace CliInterface.Core.Services
         /// </summary>
         /// <param name="url">The source image URL.</param>
         string? GetCachedPath(string url);
+
+        /// <summary>
+        /// Gets the root directory where cached graphics are stored.
+        /// </summary>
+        string CacheRoot { get; }
     }
 }

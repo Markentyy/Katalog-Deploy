@@ -4,6 +4,7 @@
   <Project Path="src/Cli/Cli.csproj" />
   <Folder Name="/src/">
     <Project Path="src/Api/Api.csproj" />
+    <Project Path="src/Gui/Gui.csproj" />
     <Project Path="src/Infrastructure/Infrastructure.csproj" />
     <Project Path="src/Presentation/Presentation.csproj" />
     <Project Path="src/Tests.Infrastructure/Tests.Infrastructure.csproj" />
