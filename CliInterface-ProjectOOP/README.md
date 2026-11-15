@@ -1,17 +1,16 @@
-# CliInterface - каталог персонажів через CLI-фасад
+# Каталог Персонажів
 
 ![build](https://github.com/Markentyy/CliInterface-ProjectOOP/actions/workflows/build.yml/badge.svg)
 ![dotnet](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
 ![csharp](https://img.shields.io/badge/C%23-12-239120?logo=csharp&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
-Навчальний проєкт за ТЗ "Командний інтерфейc додатку"
-
 ## Зміст
 
 - [Можливості](#можливості)
 - [Технології](#технології)
 - [Структура](#структура)
+- [Графічний інтерфейс](#графічний-інтерфейс)
 - [Швидкий старт](#швидкий-старт)
 - [Команди](#команди)
 - [Сумісність з версіями .NET](#сумісність-з-версіями-net)
@@ -43,6 +42,26 @@
 | Збірка і тести | xUnit, `TreatWarningsAsErrors` + XML-документація |
 | Дані | `System.Text.Json` |
 
+## Графічний інтерфейс
+
+Проєкт включає Avalonia UI (`src/Gui/`) - кроссплатформенний графічний інтерфейс на C# для перегляду каталогу персонажів. Розміщений як десктопний додаток ( однаково працює на Linux і Windows). Використовує існуючі шари без змін у них:
+
+* `CharacterCatalogPresenter` - завантаження даних і форматування (вигляд-незалежний підання);
+* `GenshinCharacterCatalogService` + `GraphicsService` - завантаження персонажів з демо-АПІ та кешування графіки.
+
+### Запуск
+
+1. Запустіть демо-АПІ (у окремому вікні):
+   ```bash
+   dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
+   ```
+2. Запустіть GUI:
+   ```bash
+   dotnet run --project src/Gui/Gui.csproj
+   ```
+
+Графік персонажів кешується локально (SHA-256 хеш URL), тому повторні відкриття вікна не роблять нових HTTP-запитів.
+
 ## Структура
 
 ```
@@ -54,6 +73,7 @@ src/
   Infrastructure/  GenshinCharacterCatalogService (API + локальний fallback)
   Presentation/   CharacterCatalogPresenter + CharacterCatalogViewModel (GUI-agnostic)
   Api/          локальна демо-API над data/characters.json (http://localhost:5000)
+  Gui/          Avalonia UI графічний інтерфейс (каталог персонaжів)
   Tests.*       юніт-тести по шарах
 ```
 
@@ -62,6 +82,7 @@ src/
 Шар `Infrastructure` залежить від `Core`.
 Шар `Presentation` залежить від `Core` + `Infrastructure`.
 `Api` залежить тільки від `Core`.
+`Gui` залежить від `Core` + `Infrastructure` + `Presentation`.
 
 ## Швидкий старт
 

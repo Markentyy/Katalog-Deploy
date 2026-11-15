@@ -41,7 +41,8 @@ Api -> Core
 | `App` | точка входу: розбір аргументів, збірка залежностей | не містить логіки |
 | `Infrastructure` | `GenshinCharacterCatalogService` - віддалений JSON API з локальним fallback на `data/characters.json` | не містить бізнес-логіки |
 | `Presentation` | `CharacterCatalogPresenter` + `CharacterCatalogViewModel` - GUI-agnostic підання каталогу | не знає про конкретний GUI-фреймворк |
-| `Api` | локальна демо-API над `data/characters.json` (Minimal API, `:5000`) | не містить бізнес-логіки, только серіалізація |
+| `Api` | локальна демо-API над `data/characters.json` (Minimal API, `:5000`) | не містить бізнес-логіки, тільки серіалізація |
+| `Gui` | Avalonia UI - кроссплатформенний графічний інтерфейс каталогу (вікно списку персонажів із пошуком і картками) | не містить бізнес-логіки, використовує Presentation |
 
 `GenshinCharacterCatalogService` намагається завантажити персонажів з віддаленого API.
 Усі публічні Genshin API (`api.genshin.dev`, `genshin.jmp.blue` тощо) зараз не
@@ -150,6 +151,37 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 * Реалізація в `Infrastructure` - `GraphicsService`, `HttpClient` з таймаутом, завантаження зображення за URL, збереження у локальну директорію даних (`Environment.SpecialFolder.LocalApplicationData`: AppData/Local на Windows, `~/.local/share` на Linux), ім'я файлу - SHA-256 хеш URL;
 * Буфер: перед кожним завантаженням перевіряється наявність локального файлу за хешем URL. Якщо файл уже існує - використовується він, HTTP-запит не виконується;
 * Це зменшує кількість запитів до сервера і дозволяє програмі працювати офлайн для раніше завантажених персонажів.
+
+## 7.6. Графічний інтерфейс (Avalonia UI)
+
+* `Gui` - Avalonia UI (`src/Gui/`) на `net10.0`, кроссплатформенний графічний інтерфейс каталогу персонажів (Linux і Windows). Використовує існуючі шари без змін: залежить від `Core` (`CharacterStats`, `IGraphicsService`), `Infrastructure` (`GenshinCharacterCatalogService`, `GraphicsService`) і `Presentation` (`CharacterCatalogPresenter`, `CharacterCatalogViewModel`);
+
+### Елементи інтерфейсу
+
+Головне вікно (`MainWindow.axaml`) містить:
+
+* Поле введення для пошуку за іменем персонажа (`TextBox` із привязкою до `SearchTerm`);
+* Кнопку «Search» (`Button` із командою `SearchCommand`), яка виконує фільтрацію за натисканням;
+* Статусний рядок із кількістю знайдених і загальної кількості персонажів;
+* Список карток персонажів (`ItemsControl` із `FilteredCharacters`), де кожна картка містить:
+  * зображення персонажа (`Image` через `GraphicsUrlConverter`),
+  * ім'я персонажа,
+  * коротку інформацію (елемент, HP, DMG, ARM, RES),
+  * посилання на графіку.
+
+### Архітектура GUI
+
+* `MainWindowViewModel` - модель подання, реалізує `INotifyPropertyChanged`; містить koleкцію `Characters`, поточний `SearchTerm`, відфільтрований список `FilteredCharacters`, команду `SearchCommand` та метод `LoadCharactersAsync()` для завантаження даних через `CharacterCatalogPresenter`;
+* `RelayCommand` - проста реалізація `ICommand` для delegating виконання дії кнопки «Search»;
+* `GraphicsUrlConverter` - конвертер `IValueConverter`, що перетворює URL графіки на cached `Bitmap` через `IGraphicsService.GetCachedPath()`;
+* `App.axaml.cs` - точка входу Avalonia; збирає залежності (`GenshinCharacterCatalogService`, `GraphicsService`, `CharacterCatalogPresenter`, `MainWindowViewModel`) та реєструє конвертер у ресурсах XAML.
+
+### Особливості реалізації
+
+* Графіка завантажується і кешується через `IGraphicsService` (SHA-256 хеш URL, локальна директорія даних, буфер) - повторне відкриття вікна не робить нових HTTP-запитів;
+* Фільтрація виконується лише після натискання кнопки «Search» (не в реальному часу);
+* При порожньому пошуку відображаються всі завантажені персонажі;
+* Структура файлів: `MainWindow.axaml` / `MainWindow.axaml.cs`, `ViewModels/MainWindowViewModel.cs`, `Commands/RelayCommand.cs`, `Converters/GraphicsUrlConverter.cs`, `App.axaml` / `App.axaml.cs`, `Gui.csproj`.
 
 ## 8. Діаграми
 

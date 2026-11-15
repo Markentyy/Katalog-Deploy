@@ -1,92 +1,223 @@
-# DataPersistence
+# Каталог Персонажів
 
-CLI character catalogue with JSON data persistence, built on a facade pattern (`useStrategy`, `execCommand`, `display`) with command strategies, renderers (`IRenderer` + `IRenderable`), and a layered architecture (.NET 8 / C# 12).
+![build](https://github.com/Markentyy/CliInterface-ProjectOOP/actions/workflows/build.yml/badge.svg)
+![dotnet](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
+![csharp](https://img.shields.io/badge/C%23-12-239120?logo=csharp&logoColor=white)
+![license](https://img.shields.io/badge/license-MIT-green)
 
-## Tech stack
+## Зміст
 
-| Layer | Responsibility |
-|-------|----------------|
-| `Core` | Domain: `Character`, `CharacterStats`, `Equipment`, `Ability`, `Registry<T>`, `DamageCalculator` |
-| `Data` | `IWorldStore` + `JsonWorldStore` (atomic JSON via `.tmp`) |
-| `Cli` | Facade, REPL, parser, renderers, command strategies |
-| `App` | Entry point: argument parsing, dependency wiring |
-| `Infrastructure` | `GenshinCharacterCatalogService` - remote API + local fallback |
-| `Presentation` | `CharacterCatalogPresenter` + `CharacterCatalogViewModel` (GUI-agnostic) |
-| `Api` | Local demo Minimal API on `:5000` serving `data/characters.json` |
+- [Можливості](#можливості)
+- [Технології](#технології)
+- [Структура](#структура)
+- [Графічний інтерфейс](#графічний-інтерфейс)
+- [Швидкий старт](#швидкий-старт)
+- [Команди](#команди)
+- [Сумісність з версіями .NET](#сумісність-з-версіями-net)
+- [Дизайн-документ](#дизайн-документ)
+- [Ролі класів](#ролі-класів)
+- [Персонажі з АПІ](#персонажі з api)
+- [Автор](#автор)
+- [Ліцензія](#ліцензія)
 
-## Quick start
+## Можливості
 
-1. **Install .NET 8 SDK** (or newer with RollForward enabled).
-2. **Clone and build**
+* інтерпретатор з рядком `>`, лапки групують слова з пробілами,
+  `help` показує команди, згруповані за стратегіями;
+* каталог персонажів: створення діалогом, спорядження, здібності,
+  посилання на графіку у кожного персонажа;
+* автоматичне збереження після кожної успішної мутації та завантаження
+  при старті (`--data <шлях>`, файл за замовчуванням `data/world.json`);
+* команди зібрані у три стратегії: інформаційні, трансформативні
+  (автозбереження), інфраструктурні (дані і довідка);
+* короткий вигляд - вирівняна таблиця з HP-баром, детальний - картка
+  персонажа з посиланням на графіку.
+
+## Технології
+
+| Технологія | Версія / примітка |
+|---|---|
+| C# | 12 |
+| .NET (цільова платформа) | 8.0 (`net8.0`, `RollForward LatestMajor`) |
+| Збірка і тести | xUnit, `TreatWarningsAsErrors` + XML-документація |
+| Дані | `System.Text.Json` |
+
+## Графічний інтерфейс
+
+Проєкт включає Avalonia UI (`src/Gui/`) - кроссплатформенний графічний інтерфейс на C# для перегляду каталогу персонажів. Розміщений як десктопний додаток ( однаково працює на Linux і Windows). Використовує існуючі шари без змін у них:
+
+* `CharacterCatalogPresenter` - завантаження даних і форматування (вигляд-незалежний підання);
+* `GenshinCharacterCatalogService` + `GraphicsService` - завантаження персонажів з демо-АПІ та кешування графіки.
+
+### Запуск
+
+1. Запустіть демо-АПІ (у окремому вікні):
    ```bash
-   git clone https://github.com/Markentyy/DataPersistence.git
-   cd DataPersistence
-   dotnet build CliInterface-ProjectOOP/CliInterface.slnx
+   dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
    ```
-3. **(Optional) Start the demo API on port 5000** - in a separate terminal:
+2. Запустіть GUI:
    ```bash
-   dotnet run --project CliInterface-ProjectOOP/src/Api/Api.csproj --urls "http://0.0.0.0:5000"
-   ```
-   Public Genshin APIs (`https://genshin.jmp.blue/`, `https://api.genshin.dev/`) are currently offline (502/521 Cloudflare), so a local demo Minimal API (`src/Api/`) serving `data/characters.json` was added as a reliable replacement. The CLI loads characters from `:5000` on startup; if unavailable, it falls back to `data/characters.json` and keeps working.
-4. **Run the CLI**
-   ```bash
-   dotnet run --project CliInterface-ProjectOOP/src/App/App.csproj --no-build
-   ```
-   Data is saved to `CliInterface-ProjectOOP/data/world.json`.
-5. **Run with a custom data file**
-   ```bash
-   dotnet run --project CliInterface-ProjectOOP/src/App/App.csproj --no-build -- --data /tmp/demo.json
-   ```
-6. **Run the demo scenario** (feeds `demo/demo.txt` as input):
-   ```bash
-   dotnet run --project CliInterface-ProjectOOP/src/App/App.csproj --no-build -- --data /tmp/demo.json < CliInterface-ProjectOOP/demo/demo.txt
-   ```
-7. **Run tests**
-   ```bash
-   dotnet test CliInterface-ProjectOOP/CliInterface.slnx
+   dotnet run --project src/Gui/Gui.csproj
    ```
 
-## Graphics download and buffering
+Графік персонажів кешується локально (SHA-256 хеш URL), тому повторні відкриття вікна не роблять нових HTTP-запитів.
 
-The CLI can load character graphics (portraits) from the catalog API and cache them locally so subsequent runs do not repeat HTTP requests:
-
-* On startup, if a character has a `GraphicsUrl`, the image is downloaded once and saved to the local data directory.
-* A buffer check runs before every download: if the file already exists locally, it is reused instead of hitting the network again.
-* This reduces server traffic and makes the program work offline for previously seen characters.
-
-## Commands
-
-| Command | Example | Description |
-|---------|---------|-------------|
-| `ls` | `ls` | Table of all characters with HP bar |
-| `info <id\|name>` | `info Mage` | Character card: stats, graphics link, inventory, abilities |
-| `create <char\|item\|ability>` | `create char` | Interactive creation dialog; empty id → auto `char-N` |
-| `add --char_id <id\|name> --id <id\|name>` | `add --char_id Mage --id Sword` | Equip item / learn ability; auto-saves on success |
-| `save` | `save` | Force-save catalogue to data file |
-| `load` | `load` | Reload data file (resets current state) |
-| `help` | `help` | List commands grouped by strategy |
-| `exit` | `exit` | Quit the interpreter |
-
-## Project layout
+## Структура
 
 ```
 src/
-  Core/          Domain model
-  Data/          JSON world store (IWorldStore)
-  Cli/           Facade, REPL, parser, renderers, strategies
-  App/           Entry point
-  Infrastructure/ Remote API client + local fallback
-  Presentation/  GUI-agnostic catalogue view model
-  Api/           Local demo Minimal API (:5000)
-  Tests.*        xUnit tests per layer (Core, Data, Cli, Infrastructure)
+  Core/         домен: CharacterStats, DamageCalculator, ICharacterCatalogService
+  Data/         збереження: IWorldStore + JSON-сховище (world.json)
+  Cli/          фасад, REPL, парсер, рендери, стратегії і команди
+  App/          точка входу (Program.cs)
+  Infrastructure/  GenshinCharacterCatalogService (API + локальний fallback)
+  Presentation/   CharacterCatalogPresenter + CharacterCatalogViewModel (GUI-agnostic)
+  Api/          локальна демо-API над data/characters.json (http://localhost:5000)
+  Gui/          Avalonia UI графічний інтерфейс (каталог персонaжів)
+  Tests.*       юніт-тести по шарах
 ```
 
-Design diagrams (PlantUML sources + rendered PNGs) live in `CliInterface-ProjectOOP/docs/img/`, full design doc in `CliInterface-ProjectOOP/docs/design.md`.
+Залежності: `App -> {Cli -> {Core, Data}, Data -> Core}`.
+Шар `Core` не знає ні про консоль, ні про збереження, ні про мережу.
+Шар `Infrastructure` залежить від `Core`.
+Шар `Presentation` залежить від `Core` + `Infrastructure`.
+`Api` залежить тільки від `Core`.
+`Gui` залежить від `Core` + `Infrastructure` + `Presentation`.
 
-## License
+## Швидкий старт
 
-MIT - see [`CliInterface-ProjectOOP/LICENSE`](CliInterface-ProjectOOP/LICENSE).
+Потрібен SDK 8.0 (або новіший - з увімкненим RollForward).
 
-## Author
+```bash
+dotnet build src/App/App.csproj
 
-Mark Voskoboinikov ([Markentyy](https://github.com/Markentyy)), group КН-31.
+# інтерактивний запуск (дані у data/world.json)
+dotnet run --project src/App/App.csproj --no-build
+
+# свій файл даних
+dotnet run --project src/App/App.csproj --no-build -- --data /tmp/demo.json
+
+# прогін демо-сценарію
+dotnet run --project src/App/App.csproj --no-build -- --data /tmp/demo.json < demo/demo.txt
+
+# тести
+dotnet test
+```
+
+## Команди
+
+| Команда | Приклад | Стратегія | Опис |
+|---|---|---|---|
+| `ls` | `ls` | Info | таблиця всіх персонажів (HP-бар, ATK/ARM, кількість предметів і здібностей) |
+| `info <id\|name>` | `info Mage` | Info | картка: здоров'я, бонуси, посилання на графіку, інвентар, книга здібностей |
+| `create <char\|item\|ability>` | `create char` | Transform | діалог створення з усіма полями; порожній id - авто `char-N` |
+| `add --char_id <id\|name> --id <id\|name>` | `add --char_id Mage --id Sword` | Transform | одягнути предмет або вивчити здібність; після успіху - збереження |
+| `save` | `save` | Infra | зберегти каталог у файл даних |
+| `load` | `load` | Infra | перечитати файл даних (скидає поточний стан) |
+| `help` | `help` | Infra | список команд, згрупованих за стратегіями |
+| `exit` | `exit` | - | вийти з інтерпретатора |
+
+Приклад сесії:
+
+```
+> create char
+Name: Gatekeeper
+MaxHealth [1-10000]: 100
+BaseArmor [0-1000]: 5
+BaseAttack [0-10000]: 10
+Graphics URL (empty to skip): https://example.com/gate.png
+Id (empty for auto):
+Created character 'Gatekeeper' [char-1] (100 HP, 5 ARM, 10 ATK).
+
+> ls
+Id        Name        Health              ATK  ARM  Items  Abilities
+--------  ----------  ------------------  ---  ---  -----  ---------
+[char-1]  Gatekeeper  ########## 100/100  10   5    0      0
+
+> info Gatekeeper
+[char-1] Gatekeeper
+  Health: ########## 100/100
+  Attack: 10 base, 10 total
+  Armor:  5 base, 5 total
+  Graphics: https://example.com/gate.png
+  Items: -
+  Abilities: -
+```
+
+## Сумісність з версіями .NET
+
+Цільова платформа проєкту - `net8.0` з `<RollForward>LatestMajor</RollForward>`,
+тому збирається і під SDK 9/10. Proєкт `Api` має цільову платформу `net10.0`.
+
+## Локальна демо-API
+
+Проєкт `src/Api/` - це .NET Minimal API, що подає 5 резервних персонажів з
+`data/characters.json`. Потрібен, оскільки усі публічні Genshin API
+(`api.genshin.dev`, `genshin.jmp.blue` тощо) не відповідають (502 / 521
+Cloudflare - початкові сервери офлайн). Локальна API - надійне джерело даних.
+
+```bash
+dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
+```
+
+Ендпоінти:
+
+* `GET /characters` - усі персонажі
+* `GET /characters/{name}` - один персонаж за іменем (регістронезалежно), 404 якщо не знайдено
+
+## Персонажі з АПІ
+
+При старті CLI автоматично намагається завантажити персонажі з локальної демо-АПІ
+(`http://localhost:5000/characters`) через `GenshinCharacterCatalogService` і
+додає їх до каталогу одночасно з локально завантаженими з `data/world.json`.
+Якщо АПІ недоступна, використовується локальний fallback `data/characters.json` -
+програма не падає, виводиться попередження.
+
+Отримати персонажів з АПІ в запущеній сесії:
+
+```bash
+# 1. Запустити демо-АПІ на порту 5000
+dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
+
+# 2. Запустити CLI (у іншому вікні терміналу)
+dotnet run --project src/App/App.csproj --no-build
+
+# 3. У CLI переглянути персонажів:
+> ls
+> info Diluc
+```
+
+Ендпоінти демо-АПІ:
+
+* `GET /characters` - усі персонажі
+* `GET /characters/{name}` - один персонаж за іменем (регістронезалежно), 404 якщо не знайдено
+
+## Дизайн-документ
+
+Детальний опис інтерфейсу і діаграми: [docs/design.md](docs/design.md).
+
+## Ролі класів
+
+| Шар | Клас | Роль |
+|---|---|---|
+| Core | `Character`, `Equipment`, `Ability` | доменні об'єкти каталогу |
+| Core | `CombatResolver` | чиста математика шкоди і лікування |
+| Core | `Registry<T>` | іменоване сховище з авто-ідентифікаторами |
+| Core | `CharacterWorld` | агрегат: реєстри + книга здібностей |
+| Data | `IWorldStore` | порт збереження |
+| Data | `JsonWorldStore` | атомарний JSON-файл (запис через `.tmp`) |
+| Cli | `Cli` | фасад: `useStrategy`, `execCommand`, `display` |
+| Cli | `LineParser`, `ParsedCommand` | розбір рядка: слова в лапках, `--опції` |
+| Cli | `ICommandStrategy` + 3 реалізації | категорії команд за ТЗ |
+| Cli | `IRenderer<T>`, `IRenderable` | розділення виводу від логіки |
+| Cli | `CharacterTableRenderer`, `CharacterCardRenderer` | два вигляди каталогу |
+| Cli | `Repl` | цикл «рядок за рядком» поверх фасада |
+
+## Автор
+
+Марк Воскобойников, група КН-31 -
+[github.com/Markentyy](https://github.com/Markentyy).
+
+## Ліцензія
+
+MIT - див. [LICENSE](LICENSE).

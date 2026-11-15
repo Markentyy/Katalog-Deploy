@@ -110,8 +110,31 @@ package "Infrastructure" {
   }
 }
 
+package "Gui" {
+  class MainWindow {
+    +OnOpened(e: EventArgs)
+  }
+  class MainWindowViewModel {
+    +SearchTerm: string
+    +SearchCommand: ICommand
+    +FilteredCharacters: IReadOnlyList<CharacterStats>
+    +LoadCharactersAsync(): Task
+  }
+  class GraphicsUrlConverter {
+    +Convert(value: object, ...): object?
+  }
+  class RelayCommand {
+    +Execute(parameter: object?)
+    +CanExecute(parameter: object?): bool
+  }
+}
+
 Core ..> Infrastructure : IGraphicsService
 IGraphicsService ..> GraphicsService
+
+Gui ..> Presentation : CharacterCatalogPresenter
+Gui ..> Core : CharacterStats, IGraphicsService
+Gui ..> Infrastructure : GenshinCharacterCatalogService, GraphicsService
 
 Cli ..> ICommandStrategy
 Cli ..> ICommand
