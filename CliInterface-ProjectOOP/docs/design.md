@@ -31,6 +31,7 @@ App -> { Cli -> { Core, Data }, Data -> Core }
 Infrastructure -> Core
 Presentation -> Core + Infrastructure
 Api -> Core
+Gui -> Core + Infrastructure + Presentation
 ```
 
 | Шар | Відповідальність | Що заборонено |
@@ -83,7 +84,7 @@ public sealed class Cli
 
 | Стратегія | Категорія | Команди |
 |---|---|---|
-| `InfoStrategy` | інформаційні | `ls`, `info` |
+| `InfoStrategy` | інформаційні | `ls`, `info`, `search` |
 | `TransformStrategy` | трансформативні | `create`, `add` (кожна мутація автоматично зберігається) |
 | `InfraStrategy` | інфраструктурні | `save`, `load`, `help` |
 
