@@ -24,7 +24,8 @@
                      Width="300" />
             <Button Content="Search"
                     Command="{Binding SearchCommand}"
-                    Width="80" />
+                    Width="80"
+                    IsVisible="False" />
         </StackPanel>
 
         <!-- Status line -->

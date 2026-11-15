@@ -179,7 +179,7 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 ### Особливості реалізації
 
 * Графіка завантажується і кешується через `IGraphicsService` (SHA-256 хеш URL, локальна директорія даних, буфер) - повторне відкриття вікна не робить нових HTTP-запитів;
-* Фільтрація виконується лише після натискання кнопки «Search» (не в реальному часу);
+* Фільтрація проходить у реальному часі при кожному введенному символі у пошуковий рядок (UpdateSourceTrigger=PropertyChanged), а не лише після натискання кнопки «Search»;
 * При порожньому пошуку відображаються всі завантажені персонажі;
 * Структура файлів: `MainWindow.axaml` / `MainWindow.axaml.cs`, `ViewModels/MainWindowViewModel.cs`, `Commands/RelayCommand.cs`, `Converters/GraphicsUrlConverter.cs`, `App.axaml` / `App.axaml.cs`, `Gui.csproj`.
 

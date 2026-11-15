@@ -117,32 +117,6 @@ dotnet test
 | `help` | `help` | Infra | список команд, згрупованих за стратегіями |
 | `exit` | `exit` | - | вийти з інтерпретатора |
 
-Приклад сесії:
-
-```
-> create char
-Name: Gatekeeper
-MaxHealth [1-10000]: 100
-BaseArmor [0-1000]: 5
-BaseAttack [0-10000]: 10
-Graphics URL (empty to skip): https://example.com/gate.png
-Id (empty for auto):
-Created character 'Gatekeeper' [char-1] (100 HP, 5 ARM, 10 ATK).
-
-> ls
-Id        Name        Health              ATK  ARM  Items  Abilities
---------  ----------  ------------------  ---  ---  -----  ---------
-[char-1]  Gatekeeper  ########## 100/100  10   5    0      0
-
-> info Gatekeeper
-[char-1] Gatekeeper
-  Health: ########## 100/100
-  Attack: 10 base, 10 total
-  Armor:  5 base, 5 total
-  Graphics: https://example.com/gate.png
-  Items: -
-  Abilities: -
-```
 
 ## Сумісність з версіями .NET
 
