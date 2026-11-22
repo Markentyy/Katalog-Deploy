@@ -6,7 +6,7 @@
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
         x:Class="Gui.MainWindow"
         x:DataType="vm:MainWindowViewModel"
-        Title="Character Catalog"
+        Title="Каталог персонажів"
         MinWidth="600" MinHeight="400">
 
     <Grid Margin="12">
@@ -16,16 +16,12 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Search area -->
+        <!-- Пошук -->
         <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8" Margin="0 0 0 12">
             <TextBox x:Name="SearchBox"
-                     PlaceholderText="Search characters by name..."
+                     PlaceholderText="Пошук персонажів за ім'ям..."
                      Text="{Binding SearchTerm, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                      Width="300" />
-            <Button Content="Search"
-                    Command="{Binding SearchCommand}"
-                    Width="80"
-                    IsVisible="False" />
         </StackPanel>
 
         <!-- Status line -->

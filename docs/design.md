@@ -1,7 +1,7 @@
 # Дизайн-документ: CLI каталогу персонажів
 
 Проєкт `CliInterface-ProjectOOP`, автор: Марк Воскобойников, КН-31.
-Тема ТЗ «Командний інтерфейс додатка» - консольний інтерфейс до каталогу
+Тема технічного завдання «Командний інтерфейс додатка» - консольний інтерфейс до каталогу
 персонажів. Документ описує архітектуру, протокол взаємодії з користувачем
 і рішення, прийняті під час реалізації.
 
@@ -9,12 +9,12 @@
 
 Потрібно, користуючись схемою з методички, спроектувати і реалізувати
 клієнтський CLI для довільного типу даних. Обрано **каталог персонажів**:
-список персонажів із загальною інформацією та посиланням на графіку,
+список персонажів із загальною інформацією та посиланням на зображення,
 створення через діалог, збереження даних.
 
 Ключові обмеження схеми:
 
-* інтерфейс побудований поверх **фасада**, який відкриває три методи -
+* інтерфейс побудований поверх **фасада**, який надає три методи -
   `useStrategy`, `execCommand`, `display`;
 * кожна команда - це клас, реалізований через **патерн «Стратегія»**;
   стратегії групують команди за категоріями (інформаційні,
@@ -41,18 +41,17 @@ Gui -> Core + Infrastructure + Presentation
 | `Cli` | фасад, парсер, REPL, рендери, стратегії | не знає про формат файлу даних |
 | `App` | точка входу: розбір аргументів, збірка залежностей | не містить логіки |
 | `Infrastructure` | `GenshinCharacterCatalogService` - віддалений JSON API з локальним fallback на `data/characters.json` | не містить бізнес-логіки |
-| `Presentation` | `CharacterCatalogPresenter` + `CharacterCatalogViewModel` - GUI-agnostic підання каталогу | не знає про конкретний GUI-фреймворк |
+| `Presentation` | `CharacterCatalogPresenter` + `CharacterCatalogViewModel` - GUI-agnostic подання каталогу | не знає про конкретний GUI-фреймворк |
 | `Api` | локальна демо-API над `data/characters.json` (Minimal API, `:5000`) | не містить бізнес-логіки, тільки серіалізація |
 | `Gui` | Avalonia UI - кроссплатформенний графічний інтерфейс каталогу (вікно списку персонажів із пошуком і картками) | не містить бізнес-логіки, використовує Presentation |
 
 `GenshinCharacterCatalogService` намагається завантажити персонажів з віддаленого API.
-Усі публічні Genshin API (`api.genshin.dev`, `genshin.jmp.blue` тощо) зараз не
-відповідають (502 / 521 Cloudflare - початкові сервери офлайн), тому сервіс
-автоматично degradе у локальний fallback-файл. Бізнес-шар ніколи не залежить від
+На момент розробки публічні Genshin API не відповідали, тому сервіс
+при недоступності мережі автоматично використовує локальний fallback-файл. Бізнес-шар ніколи не залежить від
 доступності мережі.
 
-Домен скопійований з попереднього проєкту `Shell-ProjectOOP` і доопрацьований: у `Character` додано поле
-`GraphicsUrl` (посилання на графіку - вимога теми), реєстри отримали
+Доменний шар скопійований з попереднього проєкту `Shell-ProjectOOP` і доопрацьований: у `Character` додано поле
+`GraphicsUrl` (посилання на зображення - вимога теми), реєстри отримали
 виняток `CatalogException` і підтримку завантаження стану.
 
 ## 3. Фасад `Cli`
@@ -108,9 +107,9 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 * `CharacterTableRenderer` малює `IReadOnlyList<CharacterRow>` - вирівняну
   таблицю з HP-баром (`Bar`);
 * `CharacterCardRenderer` малює `CharacterCard` - детальну картку з
-  посиланням на графіку.
+  посиланням на зображення.
 
-Команди не форматирують текст самі: вони збирають дані (рядки таблиці,
+Команди не форматують текст самі: вони збирають дані (рядки таблиці,
 картку) і викликають `cli.Display(...)` або передають рендерер напряму.
 
 ## 6. Протокол взаємодії
@@ -124,7 +123,7 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
   (got 2). Usage: info <id|name>`;
 
 Діалог створення (`create char`) покроково запитує: ім'я, максимальне
-здоров'я, базову броню, базову атаку, посилання на графіку (порожньо -
+здоров'я, базову броню, базову атаку, посилання на зображення (порожньо -
 без посилання), ідентифікатор (порожньо - авто `char-N`). Будь-який
 крок можна скасувати словом `cancel`. Значення перевіряються
 покроково: з діапазоном у підказці, повторне запитання при помилці.
@@ -132,49 +131,48 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 ## 7. Збереження даних
 
 * `JsonWorldStore` зберігає світ у JSON: персонажі (з посиланням на
-  графіку та id предметів), предмети, здібності, книги здібностей;
+  зображення та id предметів), предмети, здібності, книги здібностей;
 * запис атомарний: спочатку у `файл.tmp`, потім перейменування;
 * після кожної успішної мутації (`create`, `add`) трансформативна
   стратегія зберігає світ автоматично; збій збереження повідомляється,
   але зміна лишається в пам'яті;
-* при старті файл даних завантажується, якщо існує (`--data <шлях>`,
+* під час запуску файл даних завантажується, якщо існує (`--data <шлях>`,
   стандартно `data/world.json`); `load` перечитує файл, `save` зберігає
   примусово;
-* також при старті `App` завантажує персонажі з каталогової АПІ
+* також при старті `App` завантажує персонажі з каталогової API
   (`http://localhost:5000/characters`) через
   `GenshinCharacterCatalogService` і додає їх до `world.Characters`
-  разом із локальними; при недоступності АПІ використовується fallback
+  разом із локальними; при недоступності API використовується fallback
   `data/characters.json` з попередженням, програма не падає.
 
-## 7.5. Завантаження графіки та буфер
+## 7.5. Завантаження графіки та кеш
 
 * `IGraphicsService` (Core) - інтерфейс для роботи з графікою персонажів: `DownloadAndCacheAsync(url, cancellationToken)` повертає `(string? Path, bool Downloaded)`, `GetCachedPath(url)` повертає локальний шлях або null;
 * Реалізація в `Infrastructure` - `GraphicsService`, `HttpClient` з таймаутом, завантаження зображення за URL, збереження у локальну директорію даних (`Environment.SpecialFolder.LocalApplicationData`: AppData/Local на Windows, `~/.local/share` на Linux), ім'я файлу - SHA-256 хеш URL;
-* Буфер: перед кожним завантаженням перевіряється наявність локального файлу за хешем URL. Якщо файл уже існує - використовується він, HTTP-запит не виконується;
+* Кеш: перед кожним завантаженням перевіряється наявність локального файлу за хешем URL. Якщо файл уже існує - використовується він, HTTP-запит не виконується;
 * Це зменшує кількість запитів до сервера і дозволяє програмі працювати офлайн для раніше завантажених персонажів.
 
 ## 7.6. Графічний інтерфейс (Avalonia UI)
 
-* `Gui` - Avalonia UI (`src/Gui/`) на `net10.0`, кроссплатформенний графічний інтерфейс каталогу персонажів (Linux і Windows). Використовує існуючі шари без змін: залежить від `Core` (`CharacterStats`, `IGraphicsService`), `Infrastructure` (`GenshinCharacterCatalogService`, `GraphicsService`) і `Presentation` (`CharacterCatalogPresenter`, `CharacterCatalogViewModel`);
+* `Gui` - Avalonia UI (`src/Gui/`) на `net10.0`, кросплатформний графічний інтерфейс каталогу персонажів (Linux і Windows). Використовує існуючі шари без змін: залежить від `Core` (`CharacterStats`, `IGraphicsService`), `Infrastructure` (`GenshinCharacterCatalogService`, `GraphicsService`) і `Presentation` (`CharacterCatalogPresenter`, `CharacterCatalogViewModel`);
 
 ### Елементи інтерфейсу
 
 Головне вікно (`MainWindow.axaml`) містить:
 
 * Поле введення для пошуку за іменем персонажа (`TextBox` із привязкою до `SearchTerm`);
-* Кнопку «Search» (`Button` із командою `SearchCommand`), яка виконує фільтрацію за натисканням;
-* Статусний рядок із кількістю знайдених і загальної кількості персонажів;
+* Кнопку «Пошук» прихована (`IsVisible="False"`), тому фільтрація відбувається автоматично при кожному введеному символі у текстовому полі.
+* Статусний рядок із кількістю знайдених персонажів (`MatchCount`);
 * Список карток персонажів (`ItemsControl` із `FilteredCharacters`), де кожна картка містить:
   * зображення персонажа (`Image` через `GraphicsUrlConverter`),
   * ім'я персонажа,
-  * коротку інформацію (елемент, HP, DMG, ARM, RES),
-  * посилання на графіку.
+  * коротку інформацію (елемент, HP, DMG, ARM, RES).
 
 ### Архітектура GUI
 
-* `MainWindowViewModel` - модель подання, реалізує `INotifyPropertyChanged`; містить koleкцію `Characters`, поточний `SearchTerm`, відфільтрований список `FilteredCharacters`, команду `SearchCommand` та метод `LoadCharactersAsync()` для завантаження даних через `CharacterCatalogPresenter`;
-* `RelayCommand` - проста реалізація `ICommand` для delegating виконання дії кнопки «Search»;
-* `GraphicsUrlConverter` - конвертер `IValueConverter`, що перетворює URL графіки на cached `Bitmap` через `IGraphicsService.GetCachedPath()`;
+* `MainWindowViewModel` - модель подання, реалізує `INotifyPropertyChanged`; містить колекцію `Characters`, поточний `SearchTerm`, відфільтрований список `FilteredCharacters`, команду `SearchCommand` та метод `LoadCharactersAsync()` для завантаження даних через `CharacterCatalogPresenter`;
+* `RelayCommand` - проста реалізація `ICommand` для делегування виконання дії кнопки «Search»;
+* `GraphicsUrlConverter` - конвертер `IValueConverter`, що перетворює URL графіки на закешований `Bitmap` через `IGraphicsService.GetCachedPath()`;
 * `App.axaml.cs` - точка входу Avalonia; збирає залежності (`GenshinCharacterCatalogService`, `GraphicsService`, `CharacterCatalogPresenter`, `MainWindowViewModel`) та реєструє конвертер у ресурсах XAML.
 
 ### Особливості реалізації
@@ -194,11 +192,55 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 
 ![Потік виконання](img/flow.png)
 
-## 9. Перевірка
+## 9. Розгортання
+
+Розгортання виконується через `dotnet publish` (компільований файл `Gui`/`Gui.exe` + необхідні `dll` бібліотеки). Потрібен `.NET 10 Runtime` на цільовій машині.
+
+Підтримувані цільові платформи: `linux-x64`, `win-x64`.
+
+```bash
+# 1. Запустіть демо-API (в окремому вікні)
+dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
+
+# 2. Опублікуйте GUI для Linux
+dotnet publish src/Gui/Gui.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
+
+# 3. Опублікуйте GUI для Windows
+dotnet publish src/Gui/Gui.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
+```
+
+Запуск опублікованого додатка:
+
+```bash
+# Linux
+./publish/linux-x64/Gui
+
+# Windows
+./publish/win-x64/Gui.exe
+```
+
+Альтернативно - релізний архів `katalog-gui-linux-x64.tar.gz` вже містить скомпільований додаток (GUI, API і файл даних), вихідний код не потрібен:
+
+```bash
+tar -xzf katalog-gui-linux-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api
+
+# 2. Запустіть GUI
+./Gui
+```
+
+На Windows запустіть `Api.exe`, а потім `Gui.exe`.
+
+API обслуговує `http://localhost:5000/characters`, GUI звертається до нього при старті. Якщо API недоступна, GUI використовує локальний файл `characters.json` з архіву.
+
+## 10. Перевірка
 
 * юніт-тести по шарах: `Tests.Core` (домен, реєстри), `Tests.Data`
-  (roundtrip JSON, помилки файлу), `Tests.Cli` (фасад, стратегії,
-  рендери, REPL через тестовий двійник консолі);
-* вимоги збірки: 0 попереджень, `TreatWarningsAsErrors`,
+  (збереження та відновлення даних у JSON, помилки файлу), `Tests.Cli` (фасад, стратегії,
+  рендери, REPL через тестовий двійник консолі), `Tests.Infrastructure` (каталоговий
+  сервіс, графічний кеш, presenter);
+* вимоги збірки: без попереджень, `TreatWarningsAsErrors`,
   XML-документація для всіх загальнодоступних типів і методів;
-* демо-сценарій `demo/demo.txt` використовується і в CI, і вручну.
+* демосценарій `demo/demo.txt` використовується і в CI, і вручну.

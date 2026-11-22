@@ -1,7 +1,6 @@
 # Каталог Персонажів
 
-![build](https://github.com/Markentyy/CliInterface-ProjectOOP/actions/workflows/build.yml/badge.svg)
-![dotnet](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)
+![dotnet](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)
 ![csharp](https://img.shields.io/badge/C%23-12-239120?logo=csharp&logoColor=white)
 ![license](https://img.shields.io/badge/license-MIT-green)
 
@@ -11,12 +10,13 @@
 - [Технології](#технології)
 - [Структура](#структура)
 - [Графічний інтерфейс](#графічний-інтерфейс)
+- [Розгортання](#розгортання)
 - [Швидкий старт](#швидкий-старт)
 - [Команди](#команди)
 - [Сумісність з версіями .NET](#сумісність-з-версіями-net)
 - [Дизайн-документ](#дизайн-документ)
 - [Ролі класів](#ролі-класів)
-- [Персонажі з АПІ](#персонажі-з-апі)
+- [Персонажі з API](#персонажі-з-апі)
 - [Автор](#автор)
 - [Ліцензія](#ліцензія)
 
@@ -25,13 +25,13 @@
 * інтерпретатор з рядком `>`, лапки групують слова з пробілами,
   `help` показує команди, згруповані за стратегіями;
 * каталог персонажів: створення діалогом, спорядження, здібності,
-  посилання на графіку у кожного персонажа;
+  посилання на зображення кожного персонажа;
 * автоматичне збереження після кожної успішної мутації та завантаження
-  при старті (`--data <шлях>`, файл за замовчуванням `data/world.json`);
+  під час запуску (`--data <шлях>`, файл за замовчуванням `data/world.json`);
 * команди зібрані у три стратегії: інформаційні, трансформативні
   (автозбереження), інфраструктурні (дані і довідка);
-* короткий вигляд - вирівняна таблиця з HP-баром, детальний - картка
-  персонажа з посиланням на графіку.
+* короткий вигляд - вирівняна таблиця з HP-баром, детальна - картка
+  персонажа з посиланням на зображення.
 
 ## Технології
 
@@ -44,14 +44,14 @@
 
 ## Графічний інтерфейс
 
-Проєкт включає Avalonia UI (`src/Gui/`) - кроссплатформенний графічний інтерфейс на C# для перегляду каталогу персонажів. Розміщений як десктопний додаток ( однаково працює на Linux і Windows). Використовує існуючі шари без змін у них:
+Проєкт включає Avalonia UI (`src/Gui/`) - кросплатформний графічний інтерфейс на C# для перегляду каталогу персонажів. Розміщений як десктопний додаток (однаково працює на Linux і Windows). Використовує існуючі шари без змін:
 
-* `CharacterCatalogPresenter` - завантаження даних і форматування (вигляд-незалежний підання);
-* `GenshinCharacterCatalogService` + `GraphicsService` - завантаження персонажів з демо-АПІ та кешування графіки.
+* `CharacterCatalogPresenter` - завантаження даних і форматування (вигляд-незалежне представлення);
+* `GenshinCharacterCatalogService` + `GraphicsService` - завантаження персонажів з демо-API та кешування графіки.
 
 ### Запуск
 
-1. Запустіть демо-АПІ (у окремому вікні):
+1. Запустіть демо-API (у окремому вікні):
    ```bash
    dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
    ```
@@ -61,6 +61,47 @@
    ```
 
 Графік персонажів кешується локально (SHA-256 хеш URL), тому повторні відкриття вікна не роблять нових HTTP-запитів.
+
+## Розгортання
+
+Два способи:
+
+**А) З вихідного коду** - якщо клонуєте репозиторій:
+
+```bash
+# 1. Запустіть демо-API (в окремому вікні)
+dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
+
+# 2. Опублікуйте GUI для Linux
+dotnet publish src/Gui/Gui.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
+
+# 3. Опублікуйте GUI для Windows
+dotnet publish src/Gui/Gui.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
+
+# 4. Запуск на Linux
+./publish/linux-x64/Gui
+
+# 5. Запуск на Windows
+./publish/win-x64/Gui.exe
+```
+
+**Б) З релізного архіву** (`katalog-gui-linux-x64.tar.gz`) - вже скомпільовано, вихідний код не потрібен. Архів містить GUI, API і файл даних:
+
+```bash
+tar -xzf katalog-gui-linux-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api
+
+# 2. Запустіть GUI
+./Gui
+```
+
+На Windows розпакуйте архів і запустіть `Api.exe`, а потім `Gui.exe`.
+
+API обслуговує `http://localhost:5000/characters`, GUI звертається до нього при старті. Якщо API недоступна, GUI використовує локальний файл `characters.json` з архіву.
+
+Потрібен `.NET 10 Runtime` на цільовій машині (публікація, залежна від фреймворку, `--self-contained false`).
 
 ## Структура
 
@@ -73,7 +114,7 @@ src/
   Infrastructure/  GenshinCharacterCatalogService (API + локальний fallback)
   Presentation/   CharacterCatalogPresenter + CharacterCatalogViewModel (GUI-agnostic)
   Api/          локальна демо-API над data/characters.json (http://localhost:5000)
-  Gui/          Avalonia UI графічний інтерфейс (каталог персонaжів)
+  Gui/          Avalonia UI графічний інтерфейс (каталог персонажів)
   Tests.*       юніт-тести по шарах
 ```
 
@@ -86,7 +127,7 @@ src/
 
 ## Швидкий старт
 
-Потрібен SDK 8.0 (або новіший - з увімкненим RollForward).
+Потрібен .NET 10 SDK для всіх проєктів (Api і Gui націлені на net10.0).
 
 ```bash
 dotnet build src/App/App.csproj
@@ -97,7 +138,7 @@ dotnet run --project src/App/App.csproj --no-build
 # свій файл даних
 dotnet run --project src/App/App.csproj --no-build -- --data /tmp/demo.json
 
-# прогін демо-сценарію
+# запуск демосценарію
 dotnet run --project src/App/App.csproj --no-build -- --data /tmp/demo.json < demo/demo.txt
 
 # тести
@@ -109,7 +150,7 @@ dotnet test
 | Команда | Приклад | Стратегія | Опис |
 |---|---|---|---|
 | `ls` | `ls` | Info | таблиця всіх персонажів (HP-бар, ATK/ARM, кількість предметів і здібностей) |
-| `info <id\|name>` | `info Mage` | Info | картка: здоров'я, бонуси, посилання на графіку, інвентар, книга здібностей |
+| `info <id\|name>` | `info Mage` | Info | картка: здоров'я, бонуси, посилання на зображення, інвентар, книга здібностей |
 | `create <char\|item\|ability>` | `create char` | Transform | діалог створення з усіма полями; порожній id - авто `char-N` |
 | `add --char_id <id\|name> --id <id\|name>` | `add --char_id Mage --id Sword` | Transform | одягнути предмет або вивчити здібність; після успіху - збереження |
 | `save` | `save` | Infra | зберегти каталог у файл даних |
@@ -121,14 +162,13 @@ dotnet test
 ## Сумісність з версіями .NET
 
 Цільова платформа проєкту - `net8.0` з `<RollForward>LatestMajor</RollForward>`,
-тому збирається і під SDK 9/10. Proєкт `Api` має цільову платформу `net10.0`.
+тому збирається і під SDK 9/10. Проєкт `Api` має цільову платформу `net10.0`.
 
 ## Локальна демо-API
 
 Проєкт `src/Api/` - це .NET Minimal API, що подає 5 резервних персонажів з
-`data/characters.json`. Потрібен, оскільки усі публічні Genshin API
-(`api.genshin.dev`, `genshin.jmp.blue` тощо) не відповідають (502 / 521
-Cloudflare - початкові сервери офлайн). Локальна API - надійне джерело даних.
+`data/characters.json`. На момент розробки публічні Genshin API не відповідали,
+тому локальна API - надійне джерело даних.
 
 ```bash
 dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
@@ -139,18 +179,18 @@ dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
 * `GET /characters` - усі персонажі
 * `GET /characters/{name}` - один персонаж за іменем (регістронезалежно), 404 якщо не знайдено
 
-## Персонажі з АПІ
+## Персонажі з API
 
-При старті CLI автоматично намагається завантажити персонажі з локальної демо-АПІ
+При старті CLI автоматично намагається завантажити персонажі з локальної демо-API
 (`http://localhost:5000/characters`) через `GenshinCharacterCatalogService` і
 додає їх до каталогу одночасно з локально завантаженими з `data/world.json`.
-Якщо АПІ недоступна, використовується локальний fallback `data/characters.json` -
+Якщо API недоступна, використовується локальний fallback `data/characters.json` -
 програма не падає, виводиться попередження.
 
-Отримати персонажів з АПІ в запущеній сесії:
+Отримати персонажів з API в запущеній сесії:
 
 ```bash
-# 1. Запустити демо-АПІ на порту 5000
+# 1. Запустити демо-API на порту 5000
 dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
 
 # 2. Запустити CLI (у іншому вікні терміналу)
@@ -161,7 +201,7 @@ dotnet run --project src/App/App.csproj --no-build
 > info Diluc
 ```
 
-Ендпоінти демо-АПІ:
+Ендпоінти демо-API:
 
 * `GET /characters` - усі персонажі
 * `GET /characters/{name}` - один персонаж за іменем (регістронезалежно), 404 якщо не знайдено

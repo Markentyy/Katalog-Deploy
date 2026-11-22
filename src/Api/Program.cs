@@ -7,8 +7,13 @@ builder.WebHost.UseUrls("http://0.0.0.0:5000");
 var app = builder.Build();
 
 string baseDir = AppContext.BaseDirectory;
-string solutionRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", ".."));
-string dataPath = Path.Combine(solutionRoot, "data", "characters.json");
+string dataPath = Path.Combine(baseDir, "characters.json");
+if (!File.Exists(dataPath))
+{
+    // Development fallback: src/Api/bin/Release/<tfm>/<rid>/ -> up 5 levels = repo root
+    string solutionRoot = Path.GetFullPath(Path.Combine(baseDir, "..", "..", "..", "..", ".."));
+    dataPath = Path.Combine(solutionRoot, "data", "characters.json");
+}
 if (!File.Exists(dataPath))
     throw new FileNotFoundException($"Could not find data/characters.json at {dataPath}.");
 
