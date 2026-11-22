@@ -124,7 +124,7 @@ tar -xzf katalog-gui-win-x64.tar.gz
 
 API обслуговує `http://localhost:5000/characters`, GUI звертається до нього при старті. Якщо API недоступна, GUI використовує локальний файл `characters.json` з архіву.
 
-Потрібен `.NET 10 Runtime` на цільовій машині (публікація, залежна від фреймворку, `--self-contained false`).
+Потрібен `.NET 10 Runtime` на цільовій машині.
 
 ## Структура
 
