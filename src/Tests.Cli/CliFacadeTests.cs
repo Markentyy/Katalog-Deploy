@@ -56,6 +56,9 @@ namespace Tests.Cli
             public void Load(CharacterWorld world) => throw new DataException("load blocked");
         }
 
+        /// <summary>
+        /// Verifies that an unknown verb prints a hint.
+        /// </summary>
         [Fact]
         public void ExecCommand_UnknownVerb_PrintsHint()
         {
@@ -63,6 +66,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Unknown command 'bogus'. Type 'help'."));
         }
 
+        /// <summary>
+        /// Verifies that an empty line is ignored.
+        /// </summary>
         [Fact]
         public void ExecCommand_EmptyLine_IsIgnored()
         {
@@ -70,6 +76,9 @@ namespace Tests.Cli
             Assert.Equal(string.Empty, Console.Output);
         }
 
+        /// <summary>
+        /// Verifies that bad syntax prints an error.
+        /// </summary>
         [Fact]
         public void ExecCommand_BadSyntax_PrintsError()
         {
@@ -77,6 +86,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Error: Unknown option --wat"));
         }
 
+        /// <summary>
+        /// Verifies that exit sets the quit flag.
+        /// </summary>
         [Fact]
         public void ExecCommand_Exit_SetsQuitFlag()
         {
@@ -84,6 +96,9 @@ namespace Tests.Cli
             Assert.True(Facade.QuitRequested);
         }
 
+        /// <summary>
+        /// Verifies that ls on an empty catalog prompts creation.
+        /// </summary>
         [Fact]
         public void Ls_EmptyCatalog_PromptsCreation()
         {
@@ -91,6 +106,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("No characters. Create one with: create char"));
         }
 
+        /// <summary>
+        /// Verifies that ls renders an aligned table of characters.
+        /// </summary>
         [Fact]
         public void Ls_Characters_RendersAlignedTable()
         {
@@ -105,6 +123,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("###------- 3/10"));
         }
 
+        /// <summary>
+        /// Verifies that info by name renders a card with graphics.
+        /// </summary>
         [Fact]
         public void Info_ByName_RendersCardWithGraphics()
         {
@@ -115,6 +136,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Items: -"));
         }
 
+        /// <summary>
+        /// Verifies that an unknown object is reported.
+        /// </summary>
         [Fact]
         public void Info_UnknownObject_IsReported()
         {
@@ -122,6 +146,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Error: No catalog object 'nobody'. Try: ls"));
         }
 
+        /// <summary>
+        /// Verifies that an ambiguous name is reported.
+        /// </summary>
         [Fact]
         public void Info_AmbiguousName_IsReported()
         {
@@ -131,6 +158,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Error: Ambiguous character name 'Twin': char-1, char-2"));
         }
 
+        /// <summary>
+        /// Verifies the create char dialog flow creates and lists.
+        /// </summary>
         [Fact]
         public void CreateChar_DialogFlow_CreatesAndLists()
         {
@@ -148,6 +178,9 @@ namespace Tests.Cli
             Assert.True(dialog.Contains("Gatekeeper"));
         }
 
+        /// <summary>
+        /// Verifies that the cancel keyword aborts the dialog.
+        /// </summary>
         [Fact]
         public void Create_CancelKeyword_AbortsDialog()
         {
@@ -159,6 +192,9 @@ namespace Tests.Cli
             Assert.Equal(0, World.Characters.Count);
         }
 
+        /// <summary>
+        /// Verifies that adding an item equips it and updates the table.
+        /// </summary>
         [Fact]
         public void Add_EquipsItemAndUpdatesTable()
         {
@@ -170,6 +206,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("9"));
         }
 
+        /// <summary>
+        /// Verifies that adding twice does not duplicate the item.
+        /// </summary>
         [Fact]
         public void Add_Twice_DoesNotDuplicateItem()
         {
@@ -180,6 +219,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("Mage already has Sword equipped."));
         }
 
+        /// <summary>
+        /// Verifies that help lists commands grouped by strategy.
+        /// </summary>
         [Fact]
         public void Help_ListsCommandsGrouped()
         {
@@ -194,6 +236,9 @@ namespace Tests.Cli
             Assert.True(Console.Contains("exit - Leave the interpreter."));
         }
 
+        /// <summary>
+        /// Verifies that registering a duplicate command is rejected.
+        /// </summary>
         [Fact]
         public void UseStrategy_DuplicateCommand_IsRejected()
         {
@@ -203,6 +248,9 @@ namespace Tests.Cli
                 facade.UseStrategy(new TransformStrategy(World, null)));
         }
 
+        /// <summary>
+        /// Verifies that REPL runs until exit.
+        /// </summary>
         [Fact]
         public void Repl_RunsUntilExit()
         {

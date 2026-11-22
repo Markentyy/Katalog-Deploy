@@ -26,6 +26,9 @@ namespace Tests.Infrastructure
                     string.Equals(c.Name, name, StringComparison.OrdinalIgnoreCase)));
         }
 
+        /// <summary>
+        /// Verifies that loaded characters are sorted by name.
+        /// </summary>
         [Fact]
         public async Task LoadCharacters_ReturnsSortedByName()
         {
@@ -40,6 +43,9 @@ namespace Tests.Infrastructure
             Assert.Equal("Zed", characters[1].Name);
         }
 
+        /// <summary>
+        /// Verifies that loading a character by name returns the matching character.
+        /// </summary>
         [Fact]
         public async Task LoadCharacter_ReturnsMatchingCharacter()
         {
@@ -52,6 +58,9 @@ namespace Tests.Infrastructure
             Assert.Equal("Diluc", character!.Name);
         }
 
+        /// <summary>
+        /// Verifies that loading an unknown character returns null.
+        /// </summary>
         [Fact]
         public async Task LoadCharacter_UnknownReturnsNull()
         {
@@ -63,6 +72,9 @@ namespace Tests.Infrastructure
             Assert.Null(character);
         }
 
+        /// <summary>
+        /// Verifies that FormatCharacter returns the character summary.
+        /// </summary>
         [Fact]
         public void FormatCharacter_ReturnsSummary()
         {
@@ -74,6 +86,9 @@ namespace Tests.Infrastructure
             Assert.Equal(stats.Summary, formatted);
         }
 
+        /// <summary>
+        /// Verifies that the view model adds characters.
+        /// </summary>
         [Fact]
         public void ViewModel_AddsCharacters()
         {
@@ -89,6 +104,9 @@ namespace Tests.Infrastructure
             Assert.Null(vm.Error);
         }
 
+        /// <summary>
+        /// Verifies that the view model tracks loading state.
+        /// </summary>
         [Fact]
         public void ViewModel_TracksLoadingState()
         {
@@ -99,6 +117,9 @@ namespace Tests.Infrastructure
             Assert.False(vm.IsLoading);
         }
 
+        /// <summary>
+        /// Verifies that the view model records errors.
+        /// </summary>
         [Fact]
         public void ViewModel_RecordsError()
         {

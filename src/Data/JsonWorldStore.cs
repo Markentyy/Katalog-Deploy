@@ -87,6 +87,11 @@ namespace CliInterface.Data
 
             try
             {
+                // Deserialize into a temporary world first. Only swap onto
+                // the target world when Apply succeeds, so a malformed or
+                // inconsistent file never destroys the in-memory state.
+                CharacterWorld loaded = new();
+                Apply(loaded, dto);
                 world.Clear();
                 Apply(world, dto);
             }

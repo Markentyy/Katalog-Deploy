@@ -1,6 +1,6 @@
-# Дизайн-документ: CLI каталогу персонажів
+# Дизайн-документ: Каталог Персонажів
 
-Проєкт `CliInterface-ProjectOOP`, автор: Марк Воскобойников, КН-31.
+Проєкт «Каталог Персонажів», автор: Марк Воскобойников, КН-31.
 Тема технічного завдання «Командний інтерфейс додатка» - консольний інтерфейс до каталогу
 персонажів. Документ описує архітектуру, протокол взаємодії з користувачем
 і рішення, прийняті під час реалізації.
@@ -27,7 +27,7 @@
 ## 2. Шари і залежності
 
 ```
-App -> { Cli -> { Core, Data }, Data -> Core }
+App -> { Cli -> { Core, Data }, Data -> Core, Infrastructure }
 Infrastructure -> Core
 Presentation -> Core + Infrastructure
 Api -> Core
@@ -43,12 +43,10 @@ Gui -> Core + Infrastructure + Presentation
 | `Infrastructure` | `GenshinCharacterCatalogService` - віддалений JSON API з локальним fallback на `data/characters.json` | не містить бізнес-логіки |
 | `Presentation` | `CharacterCatalogPresenter` + `CharacterCatalogViewModel` - GUI-agnostic подання каталогу | не знає про конкретний GUI-фреймворк |
 | `Api` | локальна демо-API над `data/characters.json` (Minimal API, `:5000`) | не містить бізнес-логіки, тільки серіалізація |
-| `Gui` | Avalonia UI - кроссплатформенний графічний інтерфейс каталогу (вікно списку персонажів із пошуком і картками) | не містить бізнес-логіки, використовує Presentation |
+| `Gui` | Avalonia UI - кросплатформний графічний інтерфейс каталогу (вікно списку персонажів із пошуком і картками) | не містить бізнес-логіки, використовує Presentation |
 
-`GenshinCharacterCatalogService` намагається завантажити персонажів з віддаленого API.
-На момент розробки публічні Genshin API не відповідали, тому сервіс
-при недоступності мережі автоматично використовує локальний fallback-файл. Бізнес-шар ніколи не залежить від
-доступності мережі.
+`GenshinCharacterCatalogService` намагається завантажити персонажів з локального API.
+Станом на 15.11.2026 зовнішній API Genshin-Dev не працює, тому було реалізовано локальне API, щоб додаток не залежав від стану зовнішнього серверу.
 
 Доменний шар скопійований з попереднього проєкту `Shell-ProjectOOP` і доопрацьований: у `Character` додано поле
 `GraphicsUrl` (посилання на зображення - вимога теми), реєстри отримали
@@ -160,8 +158,8 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 
 Головне вікно (`MainWindow.axaml`) містить:
 
-* Поле введення для пошуку за іменем персонажа (`TextBox` із привязкою до `SearchTerm`);
-* Кнопку «Пошук» прихована (`IsVisible="False"`), тому фільтрація відбувається автоматично при кожному введеному символі у текстовому полі.
+* Поле введення для пошуку за іменем персонажа (`TextBox` із прив'язкою до `SearchTerm`);
+* Кнопку «Пошук» приховано (`IsVisible="False"`), тому фільтрація відбувається автоматично при кожному введеному символі у текстовому полі.
 * Статусний рядок із кількістю знайдених персонажів (`MatchCount`);
 * Список карток персонажів (`ItemsControl` із `FilteredCharacters`), де кожна картка містить:
   * зображення персонажа (`Image` через `GraphicsUrlConverter`),
@@ -194,32 +192,41 @@ CharacterCardView : IRenderable { CharacterCard + CharacterCardRenderer }
 
 ## 9. Розгортання
 
-Розгортання виконується через `dotnet publish` (компільований файл `Gui`/`Gui.exe` + необхідні `dll` бібліотеки). Потрібен `.NET 10 Runtime` на цільовій машині.
+Три способи:
 
-Підтримувані цільові платформи: `linux-x64`, `win-x64`.
+**А) Для розробки** - запуск із вихідного коду через `dotnet run`:
 
 ```bash
 # 1. Запустіть демо-API (в окремому вікні)
 dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
 
+# 2. Запустіть GUI (в іншому вікні)
+dotnet run --project src/Gui/Gui.csproj
+```
+
+**Б) Для деплою** - публікація скомпільованих бінарників для іншої машини:
+
+```bash
+# 1. Опублікуйте API для Linux
+dotnet publish src/Api/Api.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
+
 # 2. Опублікуйте GUI для Linux
 dotnet publish src/Gui/Gui.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
 
-# 3. Опублікуйте GUI для Windows
+# 3. Запуск на Linux
+./publish/linux-x64/Api   # вікно 1
+./publish/linux-x64/Gui   # вікно 2
+
+# Альтернативно для Windows:
+dotnet publish src/Api/Api.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
 dotnet publish src/Gui/Gui.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
-```
-
-Запуск опублікованого додатка:
-
-```bash
-# Linux
-./publish/linux-x64/Gui
-
-# Windows
+./publish/win-x64/Api.exe
 ./publish/win-x64/Gui.exe
 ```
 
-Альтернативно - релізний архів `katalog-gui-linux-x64.tar.gz` вже містить скомпільований додаток (GUI, API і файл даних), вихідний код не потрібен:
+**В) З релізного архіву** - вже скомпільовано, вихідний код не потрібен. Архів містить GUI, API і файл даних:
+
+**Linux** (`katalog-gui-linux-x64.tar.gz`):
 
 ```bash
 tar -xzf katalog-gui-linux-x64.tar.gz
@@ -231,7 +238,45 @@ tar -xzf katalog-gui-linux-x64.tar.gz
 ./Gui
 ```
 
-На Windows запустіть `Api.exe`, а потім `Gui.exe`.
+**Windows** (`katalog-gui-win-x64.tar.gz`):
+
+```powershell
+tar -xzf katalog-gui-win-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api.exe
+
+# 2. Запустіть GUI
+./Gui.exe
+```
+
+Підтримувані цільові платформи: `linux-x64`, `win-x64`. Потрібен `.NET 10 Runtime` на цільовій машині (публікація, залежна від фреймворку, `--self-contained false`).
+
+Альтернативно - релізний архів вже містить скомпільований додаток (GUI, API і файл даних), вихідний код не потрібен:
+
+**Linux** (`katalog-gui-linux-x64.tar.gz`):
+
+```bash
+tar -xzf katalog-gui-linux-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api
+
+# 2. Запустіть GUI
+./Gui
+```
+
+**Windows** (`katalog-gui-win-x64.tar.gz`):
+
+```powershell
+tar -xzf katalog-gui-win-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api.exe
+
+# 2. Запустіть GUI
+./Gui.exe
+```
 
 API обслуговує `http://localhost:5000/characters`, GUI звертається до нього при старті. Якщо API недоступна, GUI використовує локальний файл `characters.json` з архіву.
 
@@ -243,4 +288,4 @@ API обслуговує `http://localhost:5000/characters`, GUI звертає�
   сервіс, графічний кеш, presenter);
 * вимоги збірки: без попереджень, `TreatWarningsAsErrors`,
   XML-документація для всіх загальнодоступних типів і методів;
-* демосценарій `demo/demo.txt` використовується і в CI, і вручну.
+* демосценарій `demo/demo.txt` використовується вручну.

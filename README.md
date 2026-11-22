@@ -38,7 +38,7 @@
 | Технологія | Версія / примітка |
 |---|---|
 | C# | 12 |
-| .NET (цільова платформа) | 8.0 (`net8.0`, `RollForward LatestMajor`) |
+| .NET (цільова платформа) | 8.0 (`net8.0`, `RollForward LatestMajor`) для Core, Data, Cli, App; 10.0 (`net10.0`) для Api та Gui |
 | Збірка і тести | xUnit, `TreatWarningsAsErrors` + XML-документація |
 | Дані | `System.Text.Json` |
 
@@ -64,28 +64,41 @@
 
 ## Розгортання
 
-Два способи:
+Три способи:
 
-**А) З вихідного коду** - якщо клонуєте репозиторій:
+**А) Для розробки** - запуск із вихідного коду через `dotnet run`:
 
 ```bash
 # 1. Запустіть демо-API (в окремому вікні)
 dotnet run --project src/Api/Api.csproj --urls "http://0.0.0.0:5000"
 
+# 2. Запустіть GUI (в іншому вікні)
+dotnet run --project src/Gui/Gui.csproj
+```
+
+**Б) Для деплою** - публікація скомпільованих бінарників для іншої машини:
+
+```bash
+# 1. Опублікуйте API для Linux
+dotnet publish src/Api/Api.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
+
 # 2. Опублікуйте GUI для Linux
 dotnet publish src/Gui/Gui.csproj -c Release -r linux-x64 --self-contained false -o publish/linux-x64
 
-# 3. Опублікуйте GUI для Windows
+# 3. Запуск на Linux
+./publish/linux-x64/Api   # вікно 1
+./publish/linux-x64/Gui   # вікно 2
+
+# Альтернативно для Windows:
+dotnet publish src/Api/Api.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
 dotnet publish src/Gui/Gui.csproj -c Release -r win-x64 --self-contained false -o publish/win-x64
-
-# 4. Запуск на Linux
-./publish/linux-x64/Gui
-
-# 5. Запуск на Windows
+./publish/win-x64/Api.exe
 ./publish/win-x64/Gui.exe
 ```
 
-**Б) З релізного архіву** (`katalog-gui-linux-x64.tar.gz`) - вже скомпільовано, вихідний код не потрібен. Архів містить GUI, API і файл даних:
+**В) З релізного архіву** - вже скомпільовано, вихідний код не потрібен. Архів містить GUI, API і файл даних:
+
+**Linux** (`katalog-gui-linux-x64.tar.gz`):
 
 ```bash
 tar -xzf katalog-gui-linux-x64.tar.gz
@@ -97,7 +110,17 @@ tar -xzf katalog-gui-linux-x64.tar.gz
 ./Gui
 ```
 
-На Windows розпакуйте архів і запустіть `Api.exe`, а потім `Gui.exe`.
+**Windows** (`katalog-gui-win-x64.tar.gz`):
+
+```powershell
+tar -xzf katalog-gui-win-x64.tar.gz
+
+# 1. Запустіть демо-API (в окремому вікні)
+./Api.exe
+
+# 2. Запустіть GUI
+./Gui.exe
+```
 
 API обслуговує `http://localhost:5000/characters`, GUI звертається до нього при старті. Якщо API недоступна, GUI використовує локальний файл `characters.json` з архіву.
 
@@ -118,7 +141,8 @@ src/
   Tests.*       юніт-тести по шарах
 ```
 
-Залежності: `App -> {Cli -> {Core, Data}, Data -> Core}`.
+Залежності: `App -> {Cli -> {Core, Data}, Data -> Core, Infrastructure}`.
+`App` залежить безпосередньо від `Cli`, `Data` і `Infrastructure`.
 Шар `Core` не знає ні про консоль, ні про збереження, ні про мережу.
 Шар `Infrastructure` залежить від `Core`.
 Шар `Presentation` залежить від `Core` + `Infrastructure`.
@@ -127,7 +151,8 @@ src/
 
 ## Швидкий старт
 
-Потрібен .NET 10 SDK для всіх проєктів (Api і Gui націлені на net10.0).
+Потрібен .NET 10 SDK (цього достатньо для збірки всього рішення: Core, Data, Cli і App
+націлені на net8.0 за допомогою RollForward, а Api і Gui — на net10.0).
 
 ```bash
 dotnet build src/App/App.csproj
@@ -155,14 +180,15 @@ dotnet test
 | `add --char_id <id\|name> --id <id\|name>` | `add --char_id Mage --id Sword` | Transform | одягнути предмет або вивчити здібність; після успіху - збереження |
 | `save` | `save` | Infra | зберегти каталог у файл даних |
 | `load` | `load` | Infra | перечитати файл даних (скидає поточний стан) |
+| `search <підрядок>` | `search "Діма"` | Info | пошук персонажів за ім'ям (регістронезалежно) |
 | `help` | `help` | Infra | список команд, згрупованих за стратегіями |
 | `exit` | `exit` | - | вийти з інтерпретатора |
 
 
 ## Сумісність з версіями .NET
 
-Цільова платформа проєкту - `net8.0` з `<RollForward>LatestMajor</RollForward>`,
-тому збирається і під SDK 9/10. Проєкт `Api` має цільову платформу `net10.0`.
+Core, Data, Cli та App націлені на `net8.0` (`RollForward LatestMajor`),
+тому збираються під SDK 9/10. Api та Gui націлені на `net10.0`.
 
 ## Локальна демо-API
 
@@ -200,11 +226,6 @@ dotnet run --project src/App/App.csproj --no-build
 > ls
 > info Diluc
 ```
-
-Ендпоінти демо-API:
-
-* `GET /characters` - усі персонажі
-* `GET /characters/{name}` - один персонаж за іменем (регістронезалежно), 404 якщо не знайдено
 
 ## Дизайн-документ
 

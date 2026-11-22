@@ -12,6 +12,9 @@ namespace Tests.Infrastructure
         private static readonly string FallbackPath = Path.GetFullPath(
             Path.Combine(AppContext.BaseDirectory, "../../../../../data/characters.json"));
 
+        /// <summary>
+        /// Verifies characters load from the local JSON fallback file.
+        /// </summary>
         [Fact]
         public async Task LoadsCharactersFromFallbackFile()
         {
@@ -24,6 +27,9 @@ namespace Tests.Infrastructure
             Assert.All(characters, c => Assert.False(string.IsNullOrWhiteSpace(c.Name)));
         }
 
+        /// <summary>
+        /// Verifies case-insensitive character lookup by name.
+        /// </summary>
         [Fact]
         public async Task FindCharacterByNameCaseInsensitive()
         {
@@ -37,6 +43,9 @@ namespace Tests.Infrastructure
             Assert.Equal("Pyro", character.Element);
         }
 
+        /// <summary>
+        /// Verifies that an unknown character name returns null.
+        /// </summary>
         [Fact]
         public async Task UnknownCharacterReturnsNull()
         {
@@ -48,6 +57,9 @@ namespace Tests.Infrastructure
             Assert.Null(character);
         }
 
+        /// <summary>
+        /// Verifies that an empty or whitespace API URL throws ArgumentException.
+        /// </summary>
         [Fact]
         public void NullApiUrl_IsRejected()
         {
@@ -57,6 +69,9 @@ namespace Tests.Infrastructure
                 new GenshinCharacterCatalogService("   ", FallbackPath));
         }
 
+        /// <summary>
+        /// Verifies that an empty or whitespace fallback path throws ArgumentException.
+        /// </summary>
         [Fact]
         public void NullFallbackPath_IsRejected()
         {

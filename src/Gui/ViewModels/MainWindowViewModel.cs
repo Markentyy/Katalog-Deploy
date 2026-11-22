@@ -178,20 +178,29 @@ namespace Gui.ViewModels
                 OnPropertyChanged(nameof(MatchCount));
             }
 
-            // Pre-download and cache graphics for all loaded characters.
+            // Pre-download and cache graphics for all loaded characters,
+            // then notify the UI so card images that were previously
+            // unbound (cache not yet available) are re-evaluated.
+            var downloadTasks = new List<Task>();
             foreach (CharacterStats character in Characters)
             {
                 if (!string.IsNullOrWhiteSpace(character.GraphicsUrl))
                 {
-                    try
-                    {
-                        _ = _graphicsService.DownloadAndCacheAsync(character.GraphicsUrl);
-                    }
-                    catch
-                    {
-                        // Graphics download failures are non-fatal.
-                    }
+                    downloadTasks.Add(_graphicsService.DownloadAndCacheAsync(character.GraphicsUrl));
                 }
+            }
+            if (downloadTasks.Count > 0)
+            {
+                try
+                {
+                    await Task.WhenAll(downloadTasks);
+                }
+                catch
+                {
+                    // Graphics download failures are non-fatal.
+                }
+                OnPropertyChanged(nameof(FilteredCharacters));
+                OnPropertyChanged(nameof(MatchCount));
             }
         }
 

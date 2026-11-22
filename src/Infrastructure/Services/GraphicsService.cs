@@ -61,7 +61,7 @@ namespace CliInterface.Infrastructure.Services
             return File.Exists(path) ? path : null;
         }
 
-        private static async Task<string?> DownloadAsync(string url, CancellationToken cancellationToken)
+        private async Task<string?> DownloadAsync(string url, CancellationToken cancellationToken)
         {
             try
             {
@@ -70,7 +70,7 @@ namespace CliInterface.Infrastructure.Services
 
                 byte[] imageBytes = await response.Content.ReadAsByteArrayAsync(cancellationToken);
                 string fileName = HashUrl(url) + ".png";
-                string path = Path.Combine(DefaultCacheRoot(), fileName);
+                string path = Path.Combine(_cacheRoot, fileName);
                 File.WriteAllBytes(path, imageBytes);
                 return path;
             }

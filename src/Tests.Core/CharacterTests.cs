@@ -17,6 +17,9 @@ namespace Tests.Core
         private static Character Hero(int attack = 10, int armor = 5) =>
             new("Hero", 100, armor, attack);
 
+        /// <summary>
+        /// Verifies that a new character has full health and a graphics link.
+        /// </summary>
         [Fact]
         public void NewCharacter_HasFullHealthAndGraphicsLink()
         {
@@ -27,18 +30,27 @@ namespace Tests.Core
             Assert.False(c.IsDefeated);
         }
 
+        /// <summary>
+        /// Verifies that a character without a graphics link has null GraphicsUrl.
+        /// </summary>
         [Fact]
         public void NewCharacter_WithoutLink_HasNullGraphics()
         {
             Assert.Null(Hero().GraphicsUrl);
         }
 
+        /// <summary>
+        /// Verifies that a blank name is rejected.
+        /// </summary>
         [Fact]
         public void BlankName_IsRejected()
         {
             Assert.Throws<ArgumentException>(() => new Character("  ", 10, 0, 0));
         }
 
+        /// <summary>
+        /// Verifies that invalid stats are rejected.
+        /// </summary>
         [Fact]
         public void InvalidStats_AreRejected()
         {
@@ -47,6 +59,9 @@ namespace Tests.Core
             Assert.Throws<ArgumentOutOfRangeException>(() => new Character("A", 10, 0, -1));
         }
 
+        /// <summary>
+        /// Verifies that equipping adds bonuses to totals.
+        /// </summary>
         [Fact]
         public void Equip_AddsBonusesToTotals()
         {
@@ -56,6 +71,9 @@ namespace Tests.Core
             Assert.Equal(7, c.TotalArmor);
         }
 
+        /// <summary>
+        /// Verifies that Defend adds armor until the next attack.
+        /// </summary>
         [Fact]
         public void Defend_AddsArmorUntilNextAttack()
         {
@@ -66,6 +84,9 @@ namespace Tests.Core
             Assert.False(hero.IsDefending);
         }
 
+        /// <summary>
+        /// Verifies that an attack damages the target through armor.
+        /// </summary>
         [Fact]
         public void Attack_DamagesTargetThroughArmor()
         {
@@ -76,6 +97,9 @@ namespace Tests.Core
             Assert.Equal(22, goblin.Health);
         }
 
+        /// <summary>
+        /// Verifies that damage on a defeated target clamps at zero.
+        /// </summary>
         [Fact]
         public void Attack_OnDefeatedTarget_ClampsAtZero()
         {
@@ -86,6 +110,9 @@ namespace Tests.Core
             Assert.True(goblin.IsDefeated);
         }
 
+        /// <summary>
+        /// Verifies that Heal clamps at max health.
+        /// </summary>
         [Fact]
         public void Heal_ClampsAtMax()
         {
@@ -99,6 +126,9 @@ namespace Tests.Core
             Assert.Equal(100, victim.Health);
         }
 
+        /// <summary>
+        /// Verifies that ability damage uses the multiplier.
+        /// </summary>
         [Fact]
         public void Ability_DamageUsesMultiplier()
         {
@@ -109,10 +139,16 @@ namespace Tests.Core
             Assert.Equal(30, damage);
         }
 
+        /// <summary>
+        /// Verifies that CombatResolver never returns negative damage.
+        /// </summary>
         [Fact]
         public void CombatResolver_NeverReturnsNegativeDamage() =>
             Assert.Equal(0, CombatResolver.CalculateDamage(1, 10));
 
+        /// <summary>
+        /// Verifies that ability damage is a pure multiplier.
+        /// </summary>
         [Fact]
         public void CombatResolver_AbilityDamageIsPureMultiplier() =>
             Assert.Equal(24, CombatResolver.CalculateAbilityDamage(8, 3));

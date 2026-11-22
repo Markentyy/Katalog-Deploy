@@ -57,6 +57,9 @@ namespace Tests.Data
             return world;
         }
 
+        /// <summary>
+        /// Verifies that save/load roundtrip restores everything.
+        /// </summary>
         [Fact]
         public void SaveLoad_Roundtrip_RestoresEverything()
         {
@@ -81,6 +84,9 @@ namespace Tests.Data
             Assert.Single(target.BookOf("char-1"));
         }
 
+        /// <summary>
+        /// Verifies that auto ids continue past restored ids.
+        /// </summary>
         [Fact]
         public void SaveLoad_AutoIdsContinuePastRestored()
         {
@@ -93,6 +99,9 @@ namespace Tests.Data
                 new Character("Fresh", 10, 0, 1), null));
         }
 
+        /// <summary>
+        /// Verifies that save creates directories and leaves no temp file.
+        /// </summary>
         [Fact]
         public void Save_CreatesDirectoriesAndNoTempLeftover()
         {
@@ -102,6 +111,9 @@ namespace Tests.Data
             Assert.False(File.Exists(PathOf("nested/world.json.tmp")));
         }
 
+        /// <summary>
+        /// Verifies that loading a missing file is reported.
+        /// </summary>
         [Fact]
         public void Load_MissingFile_IsReported()
         {
@@ -109,6 +121,9 @@ namespace Tests.Data
             Assert.Throws<DataException>(() => store.Load(new CharacterWorld()));
         }
 
+        /// <summary>
+        /// Verifies that loading a malformed file is reported.
+        /// </summary>
         [Fact]
         public void Load_MalformedFile_IsReported()
         {
@@ -117,6 +132,9 @@ namespace Tests.Data
             Assert.Throws<DataException>(() => store.Load(new CharacterWorld()));
         }
 
+        /// <summary>
+        /// Verifies that loading inconsistent references is reported.
+        /// </summary>
         [Fact]
         public void Load_InconsistentReferences_AreReported()
         {
@@ -126,6 +144,9 @@ namespace Tests.Data
             Assert.Throws<DataException>(() => store.Load(new CharacterWorld()));
         }
 
+        /// <summary>
+        /// Verifies that loading a duplicate id is reported.
+        /// </summary>
         [Fact]
         public void Load_DuplicateId_IsReported()
         {
@@ -133,6 +154,25 @@ namespace Tests.Data
                 """{"Characters":[{"Id":"char-1","Name":"A","Health":10,"MaxHealth":10,"BaseArmor":0,"BaseAttack":1,"GraphicsUrl":null,"ItemIds":[]},{"Id":"char-1","Name":"B","Health":10,"MaxHealth":10,"BaseArmor":0,"BaseAttack":1,"GraphicsUrl":null,"ItemIds":[]}],"Items":[],"Abilities":[],"Books":{}}""");
             JsonWorldStore store = new(PathOf("dup.json"));
             Assert.Throws<DataException>(() => store.Load(new CharacterWorld()));
+        }
+
+        /// <summary>
+        /// Verifies that an inconsistent file preserves existing state.
+        /// </summary>
+        [Fact]
+        public void Load_InconsistentFile_PreservesExistingState()
+        {
+            CharacterWorld world = Seeded();
+            int beforeCount = world.Characters.Count;
+
+            // Write a file that parses as JSON but fails Apply (unknown item).
+            File.WriteAllText(PathOf("bad-ref.json"),
+                """{"Characters":[{"Id":"char-1","Name":"Mage","Health":10,"MaxHealth":10,"BaseArmor":0,"BaseAttack":1,"GraphicsUrl":null,"ItemIds":["item-99"]}],"Items":[],"Abilities":[],"Books":{}}""");
+            JsonWorldStore store = new(PathOf("bad-ref.json"));
+
+            Assert.Throws<DataException>(() => store.Load(world));
+            // In-memory state must be untouched by the failed load.
+            Assert.Equal(beforeCount, world.Characters.Count);
         }
     }
 }

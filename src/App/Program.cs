@@ -69,6 +69,12 @@ try
                 graphicsDownloaded++;
         }
 
+        // Skip characters already present in the world (e.g. loaded from
+        // the saved data file on a previous run) to avoid duplicates on
+        // repeated CLI startups.
+        if (world.Characters.IdsOfName(stats.Name).Count > 0)
+            continue;
+
         var character = new Character(
             name: stats.Name,
             maxHealth: stats.Health,
@@ -81,7 +87,7 @@ try
 
     console.WriteLine($"Loaded {apiCharacters.Count} characters from catalog API.");
     if (graphicsDownloaded > 0)
-        console.WriteLine($"Downloaded {graphicsDownloaded} character graphics (buffered: {apiCharacters.Count - graphicsDownloaded}).");
+        console.WriteLine($"Downloaded {graphicsDownloaded} character graphics (cached: {apiCharacters.Count - graphicsDownloaded}).");
     else
         console.WriteLine("All graphics already cached - no new downloads.");
 }

@@ -10,6 +10,9 @@ namespace Tests.Infrastructure
     {
         private readonly DamageCalculator _calculator = new();
 
+        /// <summary>
+        /// Verifies that full armor absorbs all damage.
+        /// </summary>
         [Fact]
         public void FullArmorAbsorbsAllDamage()
         {
@@ -17,6 +20,9 @@ namespace Tests.Infrastructure
             Assert.Equal(0, damage);
         }
 
+        /// <summary>
+        /// Verifies that resist reduces the effective portion of armor.
+        /// </summary>
         [Fact]
         public void ResistIgnoresPartOfArmor()
         {
@@ -26,6 +32,9 @@ namespace Tests.Infrastructure
             Assert.Equal(25, damage);
         }
 
+        /// <summary>
+        /// Verifies that a flat damage bonus adds to the result.
+        /// </summary>
         [Fact]
         public void FlatBonusAddsDamage()
         {
@@ -34,6 +43,9 @@ namespace Tests.Infrastructure
             Assert.Equal(baseDamage + 30, bonusDamage);
         }
 
+        /// <summary>
+        /// Verifies that damage cannot be negative.
+        /// </summary>
         [Fact]
         public void DamageCannotBeNegative()
         {
@@ -41,6 +53,9 @@ namespace Tests.Infrastructure
             Assert.Equal(0, damage);
         }
 
+        /// <summary>
+        /// Verifies that resist is applied after armor reduction.
+        /// </summary>
         [Fact]
         public void ResistAppliedAfterArmorReduction()
         {
@@ -50,6 +65,9 @@ namespace Tests.Infrastructure
             Assert.Equal(37.5, damage);
         }
 
+        /// <summary>
+        /// Verifies that negative arguments are rejected.
+        /// </summary>
         [Fact]
         public void NegativeArguments_AreRejected()
         {

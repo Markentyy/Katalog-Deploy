@@ -23,6 +23,9 @@ namespace Tests.Core
         /// <param name="Name">The lookup name.</param>
         public sealed record Item(string Name);
 
+        /// <summary>
+        /// Verifies that auto ids count up from one.
+        /// </summary>
         [Fact]
         public void Add_AutoIds_CountUpFromOne()
         {
@@ -32,6 +35,9 @@ namespace Tests.Core
             Assert.Equal(2, registry.Count);
         }
 
+        /// <summary>
+        /// Verifies that a custom id is used when provided.
+        /// </summary>
         [Fact]
         public void Add_CustomId_IsUsed()
         {
@@ -40,6 +46,9 @@ namespace Tests.Core
             Assert.True(registry.ContainsId("special"));
         }
 
+        /// <summary>
+        /// Verifies that a duplicate custom id is rejected.
+        /// </summary>
         [Fact]
         public void Add_DuplicateCustomId_IsRejected()
         {
@@ -48,6 +57,9 @@ namespace Tests.Core
             Assert.Throws<CatalogException>(() => registry.Add(new Item("Shield"), "x"));
         }
 
+        /// <summary>
+        /// Verifies that a loaded id advances the auto counter past it.
+        /// </summary>
         [Fact]
         public void Add_LoadedId_AdvancesAutoCounter()
         {
@@ -56,6 +68,9 @@ namespace Tests.Core
             Assert.Equal("item-8", registry.Add(new Item("Fresh")));
         }
 
+        /// <summary>
+        /// Verifies that Clear empties the registry and resets the counter.
+        /// </summary>
         [Fact]
         public void Clear_EmptiesRegistryAndResetsCounter()
         {
@@ -66,6 +81,9 @@ namespace Tests.Core
             Assert.Equal("item-1", registry.Add(new Item("New")));
         }
 
+        /// <summary>
+        /// Verifies that IdsOfName returns all matching ids.
+        /// </summary>
         [Fact]
         public void IdsOfName_ReturnsAllMatchingIds()
         {
@@ -82,6 +100,9 @@ namespace Tests.Core
     /// </summary>
     public sealed class CharacterWorldTests
     {
+        /// <summary>
+        /// Verifies that an ambiguous character name reports ambiguity.
+        /// </summary>
         [Fact]
         public void ResolveCharacter_ByAmbiguousName_ReportsAmbiguity()
         {
@@ -91,11 +112,17 @@ namespace Tests.Core
             Assert.Throws<CatalogException>(() => world.ResolveCharacter("twin"));
         }
 
+        /// <summary>
+        /// Verifies that an unknown character throws CatalogException.
+        /// </summary>
         [Fact]
         public void ResolveCharacter_Unknown_Throws() =>
             Assert.Throws<CatalogException>(() =>
                 new CharacterWorld().ResolveCharacter("nobody"));
 
+        /// <summary>
+        /// Verifies that learning the same ability twice is idempotent.
+        /// </summary>
         [Fact]
         public void Learn_IsIdempotent()
         {

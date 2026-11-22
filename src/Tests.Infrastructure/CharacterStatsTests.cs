@@ -8,6 +8,9 @@ namespace Tests.Infrastructure
     /// </summary>
     public sealed class CharacterStatsTests
     {
+        /// <summary>
+        /// Verifies that all stats properties are captured correctly.
+        /// </summary>
         [Fact]
         public void Stats_CaptureAllProperties()
         {
